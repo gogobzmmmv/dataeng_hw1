@@ -2,35 +2,38 @@ version: 2
 
 sources:
   - name: shop
-    description: "Сырые таблицы OLTP-базы магазина, загруженные в Greenplum (база dwh, схема raw) сервисом loader. dbt их только читает."
+    description: >
+      Копия OLTP-таблиц интернет-магазина,
+      загруженная из PostgreSQL в Greenplum.
+      База dwh, схема raw.
     schema: raw
     tables:
       - name: customers
-        description: "Клиенты. Одна строка — один зарегистрированный клиент."
+        description: "Клиенты. Одна строка - один зарегистрированный клиент."
         columns:
           - name: customer_id
             data_tests: [unique, not_null]
       - name: products
-        description: "Товары. Категория хранится текстом — названием из product_categories."
+        description: "Товары. Категория хранится текстом - названием из product_categories."
         columns:
           - name: product_id
             data_tests: [unique, not_null]
       - name: product_categories
-        description: "Дерево категорий: у подкатегории заполнен parent_category_id."
+        description: "Дерево категорий. У подкатегории заполнен parent_category_id."
         columns:
           - name: category_id
             data_tests: [unique, not_null]
       - name: orders
-        description: "Заказы. Одна строка — один заказ, total_amount — сумма позиций со скидками."
+        description: "Заказы. Одна строка - один заказ, total_amount - сумма позиций со скидками."
         columns:
           - name: order_id
             data_tests: [unique, not_null]
       - name: order_items
-        description: "Позиции заказов. Ключ — пара (order_id, product_id)."
+        description: "Позиции заказов. Ключ - пара (order_id, product_id)."
       - name: payments
         description: >
-          Платёжные операции. У заказа может быть несколько операций: неуспешная попытка,
-          оплата частями, повторное списание. Возврат записан успешной операцией с отрицательной суммой.
+          Платежные операции. У заказа может быть несколько: неуспешная попытка,
+          оплата частями, повторное списание. Возврат записан операцией с отрицательной суммой.
         columns:
           - name: payment_id
             data_tests: [unique, not_null]

@@ -3,8 +3,8 @@ version: 2
 models:
   - name: fct_orders
     description: >
-      Факт заказов: одна строка — один заказ. Тестовые заказы исключены.
-      К заказу пристыкованы итоги по платежам; подтверждённая покупка — статус paid
+      Факт заказов: одна строка - один заказ. Тестовые заказы исключены.
+      К заказу пристыкованы итоги по платежам; подтверждённая покупка - статус paid
       и хотя бы одна успешная оплата (возврат оплатой не считается).
     columns:
       - name: order_id
@@ -12,8 +12,20 @@ models:
         data_tests: [unique, not_null]
       - name: customer_id
         description: "Клиент, оформивший заказ."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id 
       - name: order_date
         description: "Дата заказа."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_dates')
+                field: date_day
       - name: ordered_at
         description: "Время оформления заказа."
       - name: order_status
@@ -32,4 +44,177 @@ models:
         description: "Время первой успешной оплаты; пусто, если оплат нет."
       - name: is_confirmed
         description: "Подтверждённая покупка: статус paid и хотя бы одна успешная оплата."
+        data_tests: [not_null]
+      - name: items_count
+        description: "Количество различных товаров в заказе."
+        data_tests:
+          - not_null
+
+
+  - name: fct_order_items
+    description: >
+      Позиции нетестовых заказов.
+      Одна строка - один товар в заказе.
+    columns:
+      - name: order_item_id
+        description: Уникальный идентификатор позиции заказа.
+        data_tests: [unique, not_null]
+
+      - name: order_id
+        description: Идентификатор заказа.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
+
+      - name: product_id
+        description: Идентификатор товара.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
+      - name: customer_id
+        description: Идентификатор покупателя.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+
+      - name: order_date
+        description: Дата оформления заказа.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_dates')
+                field: date_day
+
+      - name: quantity
+        description: Количество единиц товара.
+        data_tests:
+          - not_null
+          - non_negative
+
+      - name: discount_amount
+        description: Скидка на всю позицию заказа.
+        data_tests:
+          - not_null
+          - non_negative
+
+      - name: unit_price
+        description: Цена одной единицы товара.
+
+      - name: gross_amount
+        description: Стоимость позиции до скидки.
+
+      - name: line_amount
+        description: Стоимость позиции после скидки.
+
+      - name: is_confirmed
+        description: Подтвержденная покпука, статус paid и хотя бы одна успешная оплата.
+        data_tests: [not_null]
+
+
+  - name: dim_customers
+    description: >
+      Измерение всех зарегистрированных клиентов,
+      в том числе тех, кто не совершал подтвержденных покупок.
+    columns:
+      - name: customer_id
+        description: Уникальный идентификатор клиента.
+        data_tests: [unique, not_null]
+
+      - name: registered_at
+        description: Дата и время регистрации.
+
+      - name: registration_date
+        description: Дата регистрации.
+
+      - name: city
+        description: Город клиента.
+
+      - name: acquisition_channel
+        description: Канал привлечения клиента.
+
+      - name: first_confirmed_order_id
+        description: ID первой подтвержденной покупки.
+
+      - name: first_confirmed_at
+        description: Время первой подтвержденной покупки.
+
+      - name: confirmed_orders_count
+        description: Число подтвержденных покупок.
+        data_tests: [not_null]
+
+      - name: confirmed_revenue
+        description: Суммарная выручка от подтвержденных покупок.
+        data_tests: [not_null]
+
+      - name: is_buyer
+        description: Совершил ли клиент хотя бы одну подтвержденную покупку.
+        data_tests: [not_null]
+
+
+  - name: dim_products
+    description: >
+      Измерение товаров с развернутой иерархией категорий.
+      Одна строка соответствует одному товару.
+    columns:
+      - name: product_id
+        description: Уникальный идентификатор товара.
+        data_tests: [unique, not_null]
+
+      - name: product_name
+        description: Название товара.
+        data_tests: [not_null]
+
+      - name: brand
+        description: Бренд товара.
+        data_tests: [not_null]
+
+      - name: category_name
+        description: Непосредственная категория товара.
+        data_tests: [not_null]
+
+      - name: parent_category_name
+        description: Родительская категория, если существует.
+
+      - name: root_category_name
+        description: Корневая категория товара.
+        data_tests: [not_null]
+
+
+  - name: dim_dates
+    description: >
+      Календарное измерение, покрывающее все даты заказов.
+      Одна строка соответствует одному календарному дню.
+    columns:
+      - name: date_day
+        description: Календарная дата.
+        data_tests: [unique, not_null]
+
+      - name: year
+        description: Год.
+
+      - name: quarter
+        description: Номер квартала от 1 до 4.
+
+      - name: month
+        description: Номер месяца от 1 до 12.
+
+      - name: day_of_month
+        description: День месяца.
+
+      - name: day_of_week
+        description: День недели от 1 до 7.
+
+      - name: is_weekend
+        description: Признак субботы или воскресенья.
         data_tests: [not_null]

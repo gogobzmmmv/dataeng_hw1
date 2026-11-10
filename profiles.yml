@@ -1,6 +1,3 @@
-# Подключение dbt к хранилищу Greenplum (база dwh). dbt-postgres работает с Greenplum:
-# Greenplum 7 основан на PostgreSQL 12. В Docker хост и порт приходят из compose.yaml,
-# при локальном dbt используются значения по умолчанию: localhost:5440.
 dbt_shop:
   target: dev
   outputs:

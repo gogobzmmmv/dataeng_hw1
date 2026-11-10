@@ -7,8 +7,6 @@ test-paths: ["tests"]
 macro-paths: ["macros"]
 clean-targets: ["target", "dbt_packages"]
 
-# Каждый слой — в своей схеме и со своей материализацией.
-# Схемы в базе: analytics_staging, analytics_intermediate, analytics_marts.
 models:
   dbt_shop:
     staging:
@@ -21,6 +19,5 @@ models:
       +schema: marts
       +materialized: table
 
-# Таблицы с «плохими» строками упавших тестов: схема analytics_dbt_test__audit.
 data_tests:
   +store_failures: true

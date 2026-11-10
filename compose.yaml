@@ -1,9 +1,6 @@
 name: dbt_shop
 
-# OLTP (PostgreSQL) → loader → raw (Greenplum) → dbt → analytics_* (Greenplum)
-
 services:
-  # Источник: OLTP-база интернет-магазина, те же данные, что в практике 2.
   postgres:
     image: postgres:16-alpine
     environment:
@@ -21,8 +18,6 @@ services:
       timeout: 3s
       retries: 20
 
-  # Хранилище: Greenplum. Сюда загружаются сырые данные (схема raw)
-  # и здесь dbt строит аналитический слой (схемы analytics_*).
   greenplum:
     image: andruche/greenplum:7-4seg@sha256:620d6c4863520685d6b475044195f766d3dfbc7c5a3fcfe965c8ac64f2ba47aa
     hostname: gp-dwh
@@ -37,8 +32,6 @@ services:
       timeout: 5s
       retries: 120
 
-  # Загрузка OLTP → Greenplum (raw). Запускается сама при docker compose up,
-  # повторно: docker compose run --rm loader
   loader:
     image: postgres:16-alpine
     depends_on:
@@ -61,7 +54,6 @@ services:
         psql -h greenplum -U gpadmin -d dwh -At -F ' ' -c "select 'orders', count(*) from raw.orders union all select 'order_items', count(*) from raw.order_items union all select 'payments', count(*) from raw.payments union all select 'customers', count(*) from raw.customers"
     restart: "no"
 
-  # dbt в контейнере. Запуск: docker compose run --rm dbt <команда>
   dbt:
     build: .
     image: dbt-shop:1.10
